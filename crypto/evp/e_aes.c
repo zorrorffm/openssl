@@ -128,6 +128,11 @@ static void ctr64_inc(unsigned char *counter)
     } while (n);
 }
 
+#if defined(AES_PMULL_CAPABLE)
+# define AES_gcm_encrypt armv8_aes_gcm_encrypt
+# define AES_gcm_decrypt armv8_aes_gcm_decrypt
+#endif
+
 #if defined(AESNI_CAPABLE)
 # if defined(__x86_64) || defined(__x86_64__) || defined(_M_AMD64) || defined(_M_X64)
 #  define AES_gcm_encrypt aesni_gcm_encrypt

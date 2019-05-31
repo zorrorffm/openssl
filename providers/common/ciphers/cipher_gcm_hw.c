@@ -30,14 +30,24 @@ int gcm_cipher_update(PROV_GCM_CTX *ctx, const unsigned char *in,
 #if defined(AES_GCM_ASM)
             size_t bulk = 0;
 
+# if defined(AES_PMULL_CAPABLE)
+            if (len >= 512 && AES_GCM_ASM(ctx)) {
+# else
             if (len >= 32 && AES_GCM_ASM(ctx)) {
+# endif
                 size_t res = (16 - ctx->gcm.mres) % 16;
 
                 if (CRYPTO_gcm128_encrypt(&ctx->gcm, in, out, res))
                     return 0;
+# if defined(AES_PMULL_CAPABLE)
+                bulk = armv8_aes_gcm_encrypt(in + res, out + res, len - res,
+                                             ctx->gcm.key,
+                                             ctx->gcm.Yi.c, ctx->gcm.Xi.u);
+# else
                 bulk = aesni_gcm_encrypt(in + res, out + res, len - res,
                                          ctx->gcm.key,
                                          ctx->gcm.Yi.c, ctx->gcm.Xi.u);
+# endif
                 ctx->gcm.len.u[1] += bulk;
                 bulk += res;
             }
@@ -57,15 +67,25 @@ int gcm_cipher_update(PROV_GCM_CTX *ctx, const unsigned char *in,
 #if defined(AES_GCM_ASM)
             size_t bulk = 0;
 
+# if defined(AES_PMULL_CAPABLE)
+            if (len >= 512 && AES_GCM_ASM(ctx)) {
+# else
             if (len >= 16 && AES_GCM_ASM(ctx)) {
+# endif
                 size_t res = (16 - ctx->gcm.mres) % 16;
 
                 if (CRYPTO_gcm128_decrypt(&ctx->gcm, in, out, res))
                     return -1;
 
+# if defined(AES_PMULL_CAPABLE)
+                bulk = armv8_aes_gcm_decrypt(in + res, out + res, len - res,
+                                             ctx->gcm.key,
+                                             ctx->gcm.Yi.c, ctx->gcm.Xi.u);
+# else
                 bulk = aesni_gcm_decrypt(in + res, out + res, len - res,
                                          ctx->gcm.key,
                                          ctx->gcm.Yi.c, ctx->gcm.Xi.u);
+# endif
                 ctx->gcm.len.u[1] += bulk;
                 bulk += res;
             }
