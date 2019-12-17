@@ -18,138 +18,14 @@ before_install:
       fi;
     - eval "${MATRIX_EVAL}"
 
-arch:
-    - amd64
-    - arm64
-
 os:
     - linux
-    - osx
 
-compiler:
-    - clang
-    - gcc
+arch:
+    - arm64
 
 env:
-    - CONFIG_OPTS="" DESTDIR="_install"
     - CONFIG_OPTS="no-asm -Werror --debug no-afalgeng no-shared enable-rc5 enable-md2 -fsanitize=address" LSAN_OPTIONS="report_objects=1"
-    - CONFIG_OPTS="no-asm no-makedepend enable-buildtest-c++ --strict-warnings -D_DEFAULT_SOURCE" BUILDONLY="yes" CHECKDOCS="yes" GENERATE="yes" CPPFLAGS="-ansi"
-
-matrix:
-    include:
-        - os: linux
-          arch: arm64
-          dist: bionic
-          compiler: clang
-          env: CONFIG_OPTS="--strict-warnings -D__NO_STRING_INLINES no-deprecated" BUILDONLY="yes"
-        - os: linux
-          arch: arm64
-          compiler: clang
-          addons:
-              apt:
-                  packages:
-                      - clang-6.0
-          env: EXTENDED_TEST="yes" CONFIG_OPTS="enable-msan disable-afalgeng -D__NO_STRING_INLINES -Wno-unused-command-line-argument" MATRIX_EVAL="CC=clang-6.0 && CXX=clang++-6.0"
-        - os: linux
-          arch: arm64
-          compiler: clang
-          addons:
-              apt:
-                  packages:
-                      - clang-6.0
-          env: EXTENDED_TEST="yes" CONFIG_OPTS="no-asm enable-ubsan enable-rc5 enable-md2 enable-ssl3 enable-ssl3-method enable-nextprotoneg no-shared enable-buildtest-c++ -fno-sanitize=alignment -DFUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION -D__NO_STRING_INLINES -Wno-unused-command-line-argument" MATRIX_EVAL="CC=clang-6.0 && CXX=clang++-6.0"
-        - os: linux
-          arch: s390x
-          compiler: gcc
-          env: CONFIG_OPTS="--strict-warnings"
-        - os: linux-ppc64le
-          sudo: false
-          compiler: clang
-          env: CONFIG_OPTS="--strict-warnings -D__NO_STRING_INLINES"
-        - os: linux
-          compiler: gcc
-          env: CONFIG_OPTS="--strict-warnings" COMMENT="Move to the BORINGTEST build when interoperable"
-        - os: linux
-          dist: trusty
-          compiler: clang
-          env: CONFIG_OPTS="--strict-warnings -D__NO_STRING_INLINES no-deprecated"
-        - os: linux
-          dist: bionic
-          compiler: clang
-          env: CONFIG_OPTS="--strict-warnings -D__NO_STRING_INLINES no-deprecated" BUILDONLY="yes"
-        - os: linux
-          addons:
-              apt:
-                  packages:
-                      - binutils-mingw-w64
-                      - gcc-mingw-w64
-          compiler: i686-w64-mingw32-gcc
-          env: CONFIG_OPTS="no-stdio" BUILDONLY="yes"
-        # Uncomment if there is reason to believe that PPC-specific problem
-        # can be diagnosed with this possibly >30 mins sanitizer build...
-        #- os: linux-ppc64le
-        #  sudo: false
-        #  compiler: gcc
-        #  env: EXTENDED_TEST="yes" CONFIG_OPTS="no-asm enable-asan enable-ubsan no-shared -DFUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION -D__NO_STRING_INLINES"
-        - os: linux
-          addons:
-              apt:
-                  packages:
-                      - golang-1.10
-          compiler: gcc
-          env:  EXTENDED_TEST="yes" CONFIG_OPTS="--debug --coverage no-asm enable-rc5 enable-md2 enable-ec_nistp_64_gcc_128 enable-ssl3 enable-ssl3-method enable-nextprotoneg enable-weak-ssl-ciphers no-shared enable-buildtest-c++ -DPEDANTIC -DFUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION" COVERALLS="yes" BORINGSSL_TESTS="yes" CXX="g++"
-        - os: linux
-          addons:
-              apt:
-                  packages:
-                      - golang-1.10
-          compiler: gcc
-          env:  EXTENDED_TEST="yes" CONFIG_OPTS="--debug enable-ssl3 enable-ssl3-method enable-weak-ssl-ciphers enable-external-tests enable-buildtest-c++" BORINGSSL_TESTS="yes" CXX="g++" TESTS=95
-        - os: linux
-          compiler: clang
-          env: EXTENDED_TEST="yes" CONFIG_OPTS="enable-msan disable-afalgeng -D__NO_STRING_INLINES -Wno-unused-command-line-argument"
-        - os: linux
-          compiler: clang
-          env:  EXTENDED_TEST="yes" CONFIG_OPTS="no-asm enable-ubsan enable-rc5 enable-md2 enable-ssl3 enable-ssl3-method enable-nextprotoneg no-shared enable-buildtest-c++ -fno-sanitize=alignment -DFUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION -D__NO_STRING_INLINES -Wno-unused-command-line-argument" CXX="clang++"
-        - os: linux
-          compiler: clang
-          env: EXTENDED_TEST="yes" CONFIG_OPTS="no-asm enable-asan enable-rc5 enable-md2 no-shared -DFUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION -D__NO_STRING_INLINES -Wno-unused-command-line-argument"
-        - os: linux
-          compiler: gcc
-          env: EXTENDED_TEST="yes" CONFIG_OPTS="--debug no-asm enable-ubsan enable-rc5 enable-md2 enable-buildtest-c++ -DPEDANTIC" OPENSSL_TEST_RAND_ORDER=0
-        - os: linux
-          addons:
-              apt:
-                  packages:
-                      - binutils-mingw-w64
-                      - gcc-mingw-w64
-          compiler: i686-w64-mingw32-gcc
-          env: EXTENDED_TEST="yes" CONFIG_OPTS="no-pic"
-        - os: linux
-          addons:
-              apt:
-                  packages:
-                      - binutils-mingw-w64
-                      - gcc-mingw-w64
-          compiler: x86_64-w64-mingw32-gcc
-          env: EXTENDED_TEST="yes" CONFIG_OPTS="no-pic"
-        - os: linux
-          language: python
-          python: 3.7
-          install: pip install flake8
-          before_script:
-            # stop the build if there are Python syntax errors or undefined names
-            - flake8 . --count --select=E901,E999,F821,F822,F823 --show-source --statistics
-            # exit-zero treats all errors as warnings.  The GitHub editor is 127 chars wide
-            - flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
-          script: true
-    exclude:
-        - os: linux
-          compiler: clang
-        - os: osx
-          compiler: gcc
-        - arch: arm64
-          os: osx
 
 before_script:
     - env
@@ -232,9 +108,8 @@ script:
               travis_terminate 1;
           fi;
       else
-          if ! $make build_tests >~/build.log 2>&1; then
+          if ! $make build_tests ; then
               echo -e '\052\052 FAILED -- MAKE BUILD_TESTS';
-              cat ~/build.log
               travis_terminate 1;
           fi;
       fi
