@@ -1,8 +1,6 @@
 name: "Build openssl interop container from master"
 
 on:
-  schedule:
-    - cron:  '20 0 * * *'
   workflow_dispatch:
 
 jobs:
